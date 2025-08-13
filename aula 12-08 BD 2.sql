@@ -15,8 +15,8 @@ select * from funcionario_log
 CREATE OR REPLACE FUNCTION f_log_func() 
 RETURNS TRIGGER AS $$ 
 BEGIN 
-  INSERT INTO Funcionario_log      (id_funcionario, novo_salario, data_alteracao) 
-  VALUES (new.id, new.salario, now()); 
+  INSERT INTO Funcionario_log      (id_funcionario, novo_salario, data_alteracao, antigo_salario) 
+  VALUES (new.id, new.salario, now(), old.salario); 
 RETURN NEW; 
 END; $$ LANGUAGE plpgsql; 
 
@@ -28,4 +28,9 @@ FOR EACH ROW
 WHEN (old.salario<>new.salario)
 EXECUTE FUNCTION f_log_func();
 
-update Funcionario set salario = 12000 where id = 2
+update Funcionario set salario = 1500 where id = 1
+
+select fl.id, f.nome, fl.novo_salario, fl.data_alteracao
+from funcionario_log fl inner join funcionario f on (f.id = fl.id_funcionario)
+
+alter table Funcionario_log add column antigo_salario numeric
