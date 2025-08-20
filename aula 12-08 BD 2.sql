@@ -66,7 +66,7 @@ BEFORE DELETE ON Funcionario
 FOR EACH ROW
 EXECUTE FUNCTION f_log_func_delete();
 
-DELETE FROM Funcionario WHERE id = 11;
+DELETE FROM Funcionario WHERE id = 1;
 -- Fim exercicio 3
 
 -- Exércicio 4
@@ -88,12 +88,35 @@ CREATE TRIGGER trg_bloqueia_insert_func
 BEFORE INSERT ON Funcionario
 FOR EACH ROW
 EXECUTE FUNCTION f_log_func_insert_null();
+--
+
+CREATE OR REPLACE FUNCTION f_log_func_delete_3()
+RETURNS TRIGGER AS $$
+DECLARE
+  qtd_atualizacoes INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO qtd_atualizacoes
+  FROM Funcionario_log
+  WHERE id_funcionario = OLD.id;
+
+  IF qtd_atualizacoes >= 3 THEN
+    RAISE EXCEPTION 'Não é permitido excluir funcionário com 3 ou mais alterações de salário registradas no log.';
+  END IF;
+
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_bloqueia_delete_func_3
+BEFORE DELETE ON Funcionario
+FOR EACH ROW
+EXECUTE FUNCTION f_log_func_delete_3();
 -- Fim exércicio 5
 
 -- Exércicio 6
 
 -- Fim exércicio 6
-update Funcionario set salario = 1500 where id = 1
+update Funcionario set salario = 3500 where id = 1
 
 select fl.id, f.nome, fl.novo_salario, fl.data_alteracao
 from funcionario_log fl inner join funcionario f on (f.id = fl.id_funcionario)
